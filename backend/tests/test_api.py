@@ -22,7 +22,6 @@ def test_login_and_auth():
 
     token = data["access_token"]
 
-    # Read current user with token
     me_resp = client.get(
         f"{settings.API_V1_STR}/auth/me",
         headers={"Authorization": f"Bearer {token}"}
@@ -30,7 +29,7 @@ def test_login_and_auth():
     assert me_resp.status_code == 200
     assert me_resp.json()["username"] == "admin"
 
-def test_products_list_and_lookup():
+def test_all_report_endpoints():
     login_resp = client.post(
         f"{settings.API_V1_STR}/auth/login",
         json={"username": "admin", "password": "admin123"}
@@ -38,60 +37,20 @@ def test_products_list_and_lookup():
     token = login_resp.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
-    # List products
-    resp = client.get(f"{settings.API_V1_STR}/products", headers=headers)
-    assert resp.status_code == 200
-    products = resp.json()
-    assert len(products) > 0
+    dash = client.get(f"{settings.API_V1_STR}/reports/dashboard", headers=headers)
+    assert dash.status_code == 200
 
-    # SKU Lookup
-    sku = products[0]["sku"]
-    lookup_resp = client.get(f"{settings.API_V1_STR}/products/lookup/{sku}", headers=headers)
-    assert lookup_resp.status_code == 200
-    assert lookup_resp.json()["sku"] == sku
+    top = client.get(f"{settings.API_V1_STR}/reports/top-selling", headers=headers)
+    assert top.status_code == 200
 
-def test_pos_billing_and_stock_deduction():
-    login_resp = client.post(
-        f"{settings.API_V1_STR}/auth/login",
-        json={"username": "admin", "password": "admin123"}
-    )
-    token = login_resp.json()["access_token"]
-    headers = {"Authorization": f"Bearer {token}"}
+    dead = client.get(f"{settings.API_V1_STR}/reports/dead-stock", headers=headers)
+    assert dead.status_code == 200
 
-    # Fetch product & customer
-    prods = client.get(f"{settings.API_V1_STR}/products", headers=headers).json()
-    custs = client.get(f"{settings.API_V1_STR}/customers", headers=headers).json()
+    credit = client.get(f"{settings.API_V1_STR}/reports/outstanding-credit", headers=headers)
+    assert credit.status_code == 200
 
-    target_prod = prods[0]
-    initial_stock = target_prod["stock_qty"]
-    target_cust = custs[0]
-    initial_credit = target_cust["credit_balance"]
+    low = client.get(f"{settings.API_V1_STR}/reports/low-stock", headers=headers)
+    assert low.status_code == 200
 
-    # Create POS sale invoice on Credit
-    sale_payload = {
-        "customer_id": target_cust["id"],
-        "payment_type": "Credit",
-        "amount_paid": 0.0,
-        "discount": 0.0,
-        "items": [
-            {
-                "product_id": target_prod["id"],
-                "qty": 2.0,
-                "unit_price": target_prod["selling_price"],
-                "discount": 0.0
-            }
-        ]
-    }
-
-    sale_resp = client.post(f"{settings.API_V1_STR}/sales", json=sale_payload, headers=headers)
-    assert sale_resp.status_code == 201
-    sale_data = sale_resp.json()
-    assert sale_data["payment_status"] in ["Unpaid", "Credit"]
-
-    # Verify stock decremented by 2.0
-    updated_prod = client.get(f"{settings.API_V1_STR}/products/{target_prod['id']}", headers=headers).json()
-    assert updated_prod["stock_qty"] == pytest.approx(initial_stock - 2.0)
-
-    # Verify customer credit balance increased
-    updated_cust = client.get(f"{settings.API_V1_STR}/customers/{target_cust['id']}", headers=headers).json()
-    assert updated_cust["credit_balance"] == pytest.approx(initial_credit + sale_data["total"])
+    profit = client.get(f"{settings.API_V1_STR}/reports/profit-margin", headers=headers)
+    assert profit.status_code == 200

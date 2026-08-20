@@ -79,6 +79,8 @@ def record_customer_payment(
 
     db.commit()
     db.refresh(payment)
+    from app.core.cache import cache
+    cache.invalidate("reports")
 
     out = PaymentOut.model_validate(payment)
     out.customer_name = customer.name

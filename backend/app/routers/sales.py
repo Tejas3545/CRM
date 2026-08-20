@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
+from app.core.cache import cache
 from app.db.session import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
@@ -218,6 +219,7 @@ def create_sale_invoice(
 
     db.commit()
     db.refresh(sale)
+    cache.invalidate("reports")
 
     out = SaleOut.model_validate(sale)
     if customer:

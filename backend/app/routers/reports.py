@@ -2,10 +2,11 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from app.db.session import get_db
 from app.core.deps import get_current_user
+from app.core.cache import cache
 from app.models.user import User
 from app.models.product import Product
 from app.models.customer import Customer
@@ -18,14 +19,24 @@ from app.schemas.report import (
 
 router = APIRouter(prefix="/reports", tags=["Reports & Business Analytics"])
 
+def to_naive(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    return dt.replace(tzinfo=None) if hasattr(dt, "tzinfo") and dt.tzinfo else dt
+
 @router.get("/dashboard", response_model=DashboardSummary)
 def get_dashboard_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    now = datetime.now(timezone.utc)
-    today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
-    first_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    cache_key = "reports:dashboard"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
+    now = datetime.now()
+    today_start = datetime(now.year, now.month, now.day)
+    first_of_month = datetime(now.year, now.month, 1)
 
     # Sales Today
     today_sales = db.query(Sale).filter(Sale.date >= today_start).all()
@@ -45,7 +56,7 @@ def get_dashboard_summary(
     total_prods = db.query(Product).count()
     total_custs = db.query(Customer).count()
 
-    return DashboardSummary(
+    result = DashboardSummary(
         today_sales_total=round(today_total, 2),
         today_sales_count=today_count,
         monthly_sales_total=round(month_total, 2),
@@ -55,12 +66,20 @@ def get_dashboard_summary(
         total_customers_count=total_custs
     )
 
+    cache.set(cache_key, result, ttl=15)
+    return result
+
 @router.get("/top-selling", response_model=List[TopSellingProduct])
 def get_top_selling_products(
     limit: int = Query(default=10, ge=1, le=50),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    cache_key = f"reports:top-selling:{limit}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
     results = (
         db.query(
             Product.id,
@@ -89,6 +108,8 @@ def get_top_selling_products(
                 total_revenue=round(float(r.total_revenue or 0), 2)
             )
         )
+
+    cache.set(cache_key, out, ttl=30)
     return out
 
 @router.get("/dead-stock", response_model=List[DeadStockItem])
@@ -97,9 +118,13 @@ def get_dead_stock_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+    cache_key = f"reports:dead-stock:{days}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
 
-    # Subquery: products sold since cutoff
+    cutoff_date = datetime.now() - timedelta(days=days)
+
     active_product_ids = (
         db.query(SaleItem.product_id)
         .join(Sale, SaleItem.sale_id == Sale.id)
@@ -109,14 +134,14 @@ def get_dead_stock_report(
     )
     active_ids = {row[0] for row in active_product_ids}
 
-    # Products in stock but not sold since cutoff
-    dead_products = (
-        db.query(Product)
-        .filter(Product.stock_qty > 0, ~Product.id.in_(active_ids) if active_ids else True)
-        .all()
-    )
+    query = db.query(Product).filter(Product.stock_qty > 0)
+    if active_ids:
+        query = query.filter(~Product.id.in_(active_ids))
+
+    dead_products = query.all()
 
     out = []
+    now = datetime.now()
     for p in dead_products:
         last_sale = (
             db.query(Sale.date)
@@ -127,7 +152,8 @@ def get_dead_stock_report(
         )
         days_since = None
         if last_sale and last_sale[0]:
-            days_since = (datetime.now(timezone.utc) - last_sale[0]).days
+            last_date = to_naive(last_sale[0])
+            days_since = max(0, (now - last_date).days)
 
         out.append(
             DeadStockItem(
@@ -142,6 +168,8 @@ def get_dead_stock_report(
                 days_since_last_sale=days_since
             )
         )
+
+    cache.set(cache_key, out, ttl=60)
     return out
 
 @router.get("/outstanding-credit", response_model=List[OutstandingCreditItem])
@@ -149,6 +177,11 @@ def get_outstanding_credit_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    cache_key = "reports:outstanding-credit"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
     credit_customers = (
         db.query(Customer)
         .filter(Customer.credit_balance > 0)
@@ -157,6 +190,7 @@ def get_outstanding_credit_report(
     )
 
     out = []
+    now = datetime.now()
     for c in credit_customers:
         last_payment = (
             db.query(Payment)
@@ -173,8 +207,9 @@ def get_outstanding_credit_report(
         )
 
         days_overdue = 0
-        if last_invoice:
-            days_overdue = max(0, (datetime.now(timezone.utc) - last_invoice.date).days)
+        if last_invoice and last_invoice.date:
+            inv_date = to_naive(last_invoice.date)
+            days_overdue = max(0, (now - inv_date).days)
 
         out.append(
             OutstandingCreditItem(
@@ -183,10 +218,12 @@ def get_outstanding_credit_report(
                 customer_phone=c.phone,
                 customer_type=c.type,
                 credit_balance=c.credit_balance,
-                last_payment_date=last_payment.date if last_payment else None,
+                last_payment_date=to_naive(last_payment.date) if last_payment else None,
                 days_overdue=days_overdue
             )
         )
+
+    cache.set(cache_key, out, ttl=15)
     return out
 
 @router.get("/low-stock", response_model=List[LowStockItem])
@@ -194,6 +231,11 @@ def get_low_stock_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    cache_key = "reports:low-stock"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
     low_stock_prods = (
         db.query(Product)
         .filter(Product.stock_qty <= Product.low_stock_threshold)
@@ -215,6 +257,8 @@ def get_low_stock_report(
                 supplier_name=p.supplier.name if p.supplier else None
             )
         )
+
+    cache.set(cache_key, out, ttl=15)
     return out
 
 @router.get("/profit-margin", response_model=ProfitMarginSummary)
@@ -222,6 +266,11 @@ def get_profit_margin_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    cache_key = "reports:profit-margin"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
     sale_items = db.query(SaleItem).all()
 
     total_revenue = 0.0
@@ -235,9 +284,12 @@ def get_profit_margin_summary(
     gross_profit = total_revenue - total_cost
     margin_pct = (gross_profit / total_revenue * 100.0) if total_revenue > 0 else 0.0
 
-    return ProfitMarginSummary(
+    result = ProfitMarginSummary(
         total_revenue=round(total_revenue, 2),
         total_cost_of_goods=round(total_cost, 2),
         gross_profit=round(gross_profit, 2),
         profit_margin_percentage=round(margin_pct, 2)
     )
+
+    cache.set(cache_key, result, ttl=30)
+    return result
