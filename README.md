@@ -1,6 +1,6 @@
 # Apex Plumbing & Hardware — Full-Stack CRM + Inventory Management System
 
-A production-grade, single integrated CRM and Inventory Management System designed specifically for plumbing hardware retail & wholesale businesses. Built with **FastAPI**, **React (Vite)**, **Tailwind CSS**, and **SQLAlchemy**.
+A production-grade, single integrated CRM and Inventory Management System designed specifically for plumbing hardware retail & wholesale businesses. Built with **FastAPI**, **React (Vite)**, **Tailwind CSS**, and **SQLAlchemy**. Fully responsive across mobile, tablet, and desktop viewports.
 
 ---
 
