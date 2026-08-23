@@ -8,6 +8,10 @@ from app.seed import seed_database
 # Initialize DB tables
 Base.metadata.create_all(bind=engine)
 
+# A preview can start with usable sample data without a separate seed command.
+if settings.DEMO_MODE:
+    seed_database()
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
@@ -20,8 +24,9 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
-    "*"
 ]
+if settings.FRONTEND_URL:
+    origins.append(settings.FRONTEND_URL.rstrip("/"))
 
 app.add_middleware(
     CORSMiddleware,

@@ -59,6 +59,27 @@ Frontend App: `http://localhost:5173`
 | **Owner / Admin** | `admin` | `admin123` |
 | **Cashier / Staff** | `cashier` | `staff123` |
 
+## Preview Deployment
+
+The simplest preview setup uses **Render for the FastAPI backend** and **Vercel for the React frontend**.
+
+### 1. Deploy the backend to Render
+
+1. Create a new Render Blueprint from this repository. Render will detect `render.yaml`.
+2. After the service is created, open its environment settings and set `FRONTEND_URL` to the future Vercel URL, for example `https://your-crm.vercel.app`.
+3. Confirm the service is running. The API docs will be available at `https://your-render-service.onrender.com/api/v1/docs`.
+
+`DEMO_MODE=true` creates the sample users, products, customers, suppliers, and transactions automatically when the service starts. The included SQLite database is suitable for a preview only; Render's local filesystem is not durable. Use a managed PostgreSQL database before real use.
+
+### 2. Deploy the frontend to Vercel
+
+1. Import the same repository into Vercel.
+2. Set the project root directory to `frontend`.
+3. Set the environment variable `VITE_API_URL` to the Render API URL including `/api/v1`, for example `https://your-render-service.onrender.com/api/v1`.
+4. Deploy. `frontend/vercel.json` handles React Router deep links.
+
+Use `admin` / `admin123` or `cashier` / `staff123` on the preview login screen. Keep these credentials and demo mode limited to a public sample deployment.
+
 ---
 
 ## GST Tax Invoice PDF

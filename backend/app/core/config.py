@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     
     # Database: Default to local SQLite database in project directory
     DATABASE_URL: str = "sqlite:///./crm_inventory.db"
+
+    # Preview deployment options
+    DEMO_MODE: bool = False
+    FRONTEND_URL: str = ""
     
     # Shop details for GST invoicing
     SHOP_NAME: str = "Apex Plumbing & Hardware Stores"
