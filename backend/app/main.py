@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from app.core.config import settings
 from app.db.session import engine, Base
 from app.routers import auth, products, customers, suppliers, purchases, sales, payments, reports
@@ -21,20 +22,27 @@ app = FastAPI(
     redoc_url=f"{settings.API_V1_STR}/redoc"
 )
 
-# CORS Middleware for React Frontend
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "https://crmims.vercel.app",
-]
-if settings.FRONTEND_URL:
-    origins.append(settings.FRONTEND_URL.rstrip("/"))
+# Custom CORS HTTP Middleware for guaranteed preflight & origin handling
+@app.middleware("http")
+async def add_cors_headers(request: Request, call_next):
+    if request.method == "OPTIONS":
+        response = Response(status_code=200)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
 
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With, Accept"
+    return response
+
+# Standard FastAPI CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,13 +62,6 @@ app.include_router(reports.router, prefix=settings.API_V1_STR)
 def root():
     return {
         "status": "online",
-        "system": settings.PROJECT_NAME,
-        "version": "1.0.0",
+        "message": f"Welcome to {settings.PROJECT_NAME} API",
         "docs": f"{settings.API_V1_STR}/docs"
     }
-
-@app.post(f"{settings.API_V1_STR}/seed")
-def seed_demo_data():
-    """Seed sample hardware catalog, customers & sales for local demonstration."""
-    seed_database()
-    return {"status": "success", "message": "Demonstration data seeded successfully!"}
