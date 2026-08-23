@@ -63,6 +63,8 @@ Frontend App: `http://localhost:5173`
 
 The simplest preview setup uses **Render for the FastAPI backend** and **Vercel for the React frontend**.
 
+If Render requires a paid service, Vercel can host both parts for a demo preview. The backend entrypoint is `backend/api/index.py`; deploy the `backend` directory as a separate Vercel project. Set `DEMO_MODE=true`, `FRONTEND_URL=https://frontend-beta-gray-83.vercel.app`, and a strong `SECRET_KEY` in the backend project. Vercel's temporary filesystem means this option is for previews only and data can reset between instances.
+
 ### 1. Deploy the backend to Render
 
 1. Create a new Render Blueprint from this repository. Render will detect `render.yaml`.

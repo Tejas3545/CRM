@@ -12,7 +12,8 @@ import {
   User,
   CreditCard,
   Barcode,
-  X
+  X,
+  Package
 } from 'lucide-react';
 
 export default function POSBilling() {
@@ -22,6 +23,9 @@ export default function POSBilling() {
   const [barcodeInput, setBarcodeInput] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   
+  // Mobile Tab State: 'catalog' | 'cart'
+  const [mobileTab, setMobileTab] = useState('catalog');
+
   // Cart state
   const [cart, setCart] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
@@ -146,6 +150,7 @@ export default function POSBilling() {
   };
 
   const { subtotal, totalGst, grandTotal } = calculateTotals();
+  const totalCartCount = cart.reduce((a, b) => a + b.qty, 0);
 
   // Handle Invoice Submit
   const handleCheckout = async () => {
@@ -205,15 +210,42 @@ export default function POSBilling() {
   });
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-3 sm:p-6 space-y-4">
       {/* Top Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
-            <ShoppingCart className="w-6 h-6 text-orange-500" />
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-100 tracking-tight flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500" />
             Fast POS Billing Terminal
           </h2>
           <p className="text-xs text-slate-400">Quick barcode scan, instant GST tax calculation, cash & credit udhaar split.</p>
+        </div>
+
+        {/* Mobile View Toggle Buttons (< lg) */}
+        <div className="flex lg:hidden bg-slate-900 border border-slate-800 p-1 rounded-lg">
+          <button
+            onClick={() => setMobileTab('catalog')}
+            className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-center space-x-1.5 transition ${
+              mobileTab === 'catalog'
+                ? 'bg-orange-600 text-white shadow'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Package className="w-3.5 h-3.5" />
+            <span>Catalog ({filteredProducts.length})</span>
+          </button>
+
+          <button
+            onClick={() => setMobileTab('cart')}
+            className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-center space-x-1.5 transition ${
+              mobileTab === 'cart'
+                ? 'bg-orange-600 text-white shadow'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span>Cart ({totalCartCount}) • ₹{grandTotal.toFixed(0)}</span>
+          </button>
         </div>
       </div>
 
@@ -224,12 +256,12 @@ export default function POSBilling() {
         </div>
       )}
 
-      {/* Grid: Left Product Catalog Picker | Right Cart & Billing Checkout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* LEFT COLUMN: Product Catalog (7 cols) */}
-        <div className="lg:col-span-7 space-y-4">
+      {/* Grid Layout: Desktop Side-by-Side (7 cols catalog, 5 cols cart) | Mobile Toggle Views */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+        {/* LEFT COLUMN: Product Catalog */}
+        <div className={`lg:col-span-7 space-y-4 ${mobileTab === 'cart' ? 'hidden lg:block' : 'block'}`}>
           {/* Quick Barcode Scanner & Search Bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-3">
             <form onSubmit={handleBarcodeSubmit} className="sm:col-span-5 relative">
               <input
                 ref={barcodeInputRef}
@@ -272,7 +304,7 @@ export default function POSBilling() {
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[460px] sm:max-h-[520px] overflow-y-auto pr-1">
             {filteredProducts.map((p) => {
               const isOut = p.stock_qty <= 0;
               const isLow = p.stock_qty <= p.low_stock_threshold;
@@ -314,15 +346,34 @@ export default function POSBilling() {
               );
             })}
           </div>
+
+          {/* Sticky Floating Mobile Checkout Bar (< lg) */}
+          {cart.length > 0 && (
+            <div className="lg:hidden sticky bottom-2 bg-orange-600 text-white p-3 rounded-xl shadow-xl flex items-center justify-between z-20">
+              <div>
+                <div className="text-xs font-semibold">{totalCartCount} items selected</div>
+                <div className="text-sm font-bold">Total: ₹ {grandTotal.toFixed(2)}</div>
+              </div>
+              <button
+                onClick={() => setMobileTab('cart')}
+                className="bg-slate-950 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-lg flex items-center space-x-1.5"
+              >
+                <span>Proceed to Checkout</span>
+                <ShoppingCart className="w-4 h-4 text-orange-400" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* RIGHT COLUMN: Cart & Checkout (5 cols) */}
-        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-4 shadow-sm">
+        {/* RIGHT COLUMN: Cart & Checkout */}
+        <div className={`lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-4 shadow-sm ${
+          mobileTab === 'catalog' ? 'hidden lg:flex' : 'flex'
+        }`}>
           {/* Cart Header */}
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="font-bold text-slate-100 flex items-center gap-2 text-sm">
               <ShoppingCart className="w-4 h-4 text-orange-500" />
-              Current Sale Items ({cart.reduce((a, b) => a + b.qty, 0)})
+              Current Sale Items ({totalCartCount})
             </h3>
             {cart.length > 0 && (
               <button
@@ -346,7 +397,7 @@ export default function POSBilling() {
                 const itemTotal = (item.qty * item.unit_price) * (1 + item.gst_rate / 100.0);
                 return (
                   <div key={item.product_id} className="bg-slate-950/70 border border-slate-800 p-2.5 rounded-lg flex items-center justify-between">
-                    <div className="space-y-0.5 max-w-[170px]">
+                    <div className="space-y-0.5 max-w-[150px] sm:max-w-[170px]">
                       <div className="text-xs font-bold text-slate-200 truncate">{item.name}</div>
                       <div className="text-[10px] text-slate-400 font-mono">
                         ₹{item.unit_price} + {item.gst_rate}% GST
@@ -435,7 +486,7 @@ export default function POSBilling() {
               </div>
             </div>
 
-            {/* Overall Discount Field */}
+            {/* Overall Discount & Paid Input Fields */}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-[10px] text-slate-400">Discount (₹)</label>

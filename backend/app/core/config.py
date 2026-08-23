@@ -8,8 +8,11 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days for ease of use
     
-    # Database: Default to local SQLite database in project directory
-    DATABASE_URL: str = "sqlite:///./crm_inventory.db"
+    # Use temporary storage on Vercel; keep the local database for development.
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        "sqlite:////tmp/crm_inventory.db" if os.getenv("VERCEL") else "sqlite:///./crm_inventory.db"
+    )
 
     # Preview deployment options
     DEMO_MODE: bool = False
