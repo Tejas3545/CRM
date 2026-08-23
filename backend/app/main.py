@@ -8,9 +8,11 @@ from app.seed import seed_database
 # Initialize DB tables
 Base.metadata.create_all(bind=engine)
 
-# A preview can start with usable sample data without a separate seed command.
-if settings.DEMO_MODE:
+# Seed database on startup if empty for client showcase preview
+try:
     seed_database()
+except Exception as e:
+    print(f"Startup DB info: {e}")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
