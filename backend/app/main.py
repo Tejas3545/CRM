@@ -60,6 +60,9 @@ app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(reports.router, prefix=settings.API_V1_STR)
 
 @app.post(f"{settings.API_V1_STR}/seed")
+@app.get(f"{settings.API_V1_STR}/seed")
+@app.post("/seed")
+@app.get("/seed")
 def seed_demo_data():
     try:
         seed_database()
