@@ -59,6 +59,14 @@ app.include_router(sales.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(reports.router, prefix=settings.API_V1_STR)
 
+@app.post(f"{settings.API_V1_STR}/seed")
+def seed_demo_data():
+    try:
+        seed_database()
+        return {"status": "success", "message": "Demonstration data successfully loaded!"}
+    except Exception as e:
+        return {"status": "info", "message": str(e)}
+
 @app.get("/")
 def root():
     return {

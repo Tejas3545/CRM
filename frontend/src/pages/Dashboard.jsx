@@ -52,6 +52,10 @@ export default function Dashboard() {
     }
   };
 
+  const todaySales = summary.today_sales_total ?? summary.today_sales ?? 0;
+  const todayCollections = summary.monthly_sales_total ?? summary.today_collections ?? 0;
+  const totalUdhaar = summary.total_outstanding_credit ?? summary.total_receivable_credit ?? 0;
+
   return (
     <div className="p-3.5 sm:p-6 space-y-6 max-w-7xl mx-auto">
       {/* Header Banner */}
@@ -88,11 +92,11 @@ export default function Dashboard() {
           </div>
           <div className="mt-2">
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              ₹ {summary.today_sales ? summary.today_sales.toLocaleString('en-IN') : '0'}
+              ₹ {todaySales.toLocaleString('en-IN')}
             </div>
             <div className="flex items-center space-x-1.5 text-xs text-slate-500 mt-1">
               <span className="font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded text-[11px]">
-                {summary.today_sales_count} Bills
+                {summary.today_sales_count || 0} Bills
               </span>
               <span>generated today</span>
             </div>
@@ -103,17 +107,17 @@ export default function Dashboard() {
         {/* Card 2: Cash & Bank Collections */}
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs relative overflow-hidden group hover:border-emerald-300 transition">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Today's Collected</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Monthly Sales</span>
             <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
               <CreditCard className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-2">
             <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600">
-              ₹ {summary.today_collections ? summary.today_collections.toLocaleString('en-IN') : '0'}
+              ₹ {todayCollections.toLocaleString('en-IN')}
             </div>
             <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
-              <span>Cash & UPI payments received</span>
+              <span>Month to date total sales</span>
             </div>
           </div>
           <div className="h-1 w-full bg-emerald-500 rounded-full mt-3"></div>
@@ -129,7 +133,7 @@ export default function Dashboard() {
           </div>
           <div className="mt-2">
             <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
-              ₹ {summary.total_receivable_credit ? summary.total_receivable_credit.toLocaleString('en-IN') : '0'}
+              ₹ {totalUdhaar.toLocaleString('en-IN')}
             </div>
             <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
               <span>Pending contractor credit balance</span>

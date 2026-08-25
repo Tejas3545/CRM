@@ -55,7 +55,7 @@ export const productService = {
   create: (data) => api.post('/products', data),
   update: (id, data) => api.put(`/products/${id}`, data),
   delete: (id) => api.delete(`/products/${id}`),
-  adjustStock: (data) => api.post('/products/adjust-stock', data),
+  adjustStock: (productId, data) => api.post('/products/adjust-stock', { product_id: productId, ...data }),
   bulkConvert: (data) => api.post('/products/bulk-convert', data),
   getAdjustmentLogs: () => api.get('/products/adjustments/log'),
 };
@@ -87,6 +87,7 @@ export const purchaseService = {
 
 // Sale Services
 export const saleService = {
+  listInvoices: (params) => api.get('/sales', { params }),
   list: (params) => api.get('/sales', { params }),
   get: (id) => api.get(`/sales/${id}`),
   createInvoice: (data) => api.post('/sales', data),
@@ -96,12 +97,15 @@ export const saleService = {
 // Payment Services
 export const paymentService = {
   list: (params) => api.get('/payments', { params }),
+  record: (data) => api.post('/payments', data),
   recordPayment: (data) => api.post('/payments', data),
 };
 
 // Report Services
 export const reportService = {
   getDashboard: () => api.get('/reports/dashboard'),
+  getSummary: () => api.get('/reports/dashboard'),
+  getSalesReport: (params) => api.get('/reports/sales', { params }),
   getTopSelling: (limit = 10) => api.get(`/reports/top-selling?limit=${limit}`),
   getDeadStock: (days = 30) => api.get(`/reports/dead-stock?days=${days}`),
   getOutstandingCredit: () => api.get('/reports/outstanding-credit'),

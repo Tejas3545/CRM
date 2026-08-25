@@ -293,3 +293,53 @@ def get_profit_margin_summary(
 
     cache.set(cache_key, result, ttl=30)
     return result
+
+@router.get("/sales")
+def get_sales_report(
+    start_date: Optional[str] = Query(default=None),
+    end_date: Optional[str] = Query(default=None),
+    payment_type: Optional[str] = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    query = db.query(Sale)
+    if payment_type and payment_type != "All":
+        query = query.filter(Sale.payment_type == payment_type)
+    
+    if start_date:
+        try:
+            sd = datetime.strptime(start_date, "%Y-%m-%d")
+            query = query.filter(Sale.date >= sd)
+        except Exception:
+            pass
+
+    if end_date:
+        try:
+            ed = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            query = query.filter(Sale.date < ed)
+        except Exception:
+            pass
+
+    sales = query.order_by(desc(Sale.date)).all()
+
+    total_sales = sum(s.total for s in sales)
+    total_discount = sum(s.discount for s in sales)
+
+    inv_list = []
+    for s in sales:
+        inv_list.append({
+            "id": s.id,
+            "invoice_no": s.invoice_no,
+            "customer_name": s.customer.name if s.customer else "Walk-in Retail",
+            "payment_type": s.payment_type,
+            "total": s.total,
+            "created_at": s.date.isoformat() if s.date else datetime.now().isoformat()
+        })
+
+    return {
+        "total_sales": round(total_sales, 2),
+        "total_invoices": len(sales),
+        "total_discount": round(total_discount, 2),
+        "invoices": inv_list
+    }
+
