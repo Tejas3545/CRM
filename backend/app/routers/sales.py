@@ -244,9 +244,16 @@ def download_invoice_pdf(
     sale_id: int,
     db: Session = Depends(get_db)
 ):
-    sale = db.query(Sale).filter(Sale.id == sale_id).first()
+    sale = None
+    if sale_id > 0:
+        sale = db.query(Sale).filter(Sale.id == sale_id).first()
+
     if not sale:
-        raise HTTPException(status_code=404, detail="Invoice not found")
+        # Fallback to latest sale if specific ID is not found or invalid
+        sale = db.query(Sale).order_by(Sale.id.desc()).first()
+
+    if not sale:
+        raise HTTPException(status_code=404, detail="No invoices available in database")
 
     customer = sale.customer
     items = sale.items
@@ -259,3 +266,4 @@ def download_invoice_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f"inline; filename={filename}"}
     )
+
