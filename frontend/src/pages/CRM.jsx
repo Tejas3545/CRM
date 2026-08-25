@@ -363,50 +363,61 @@ export default function CRM() {
         <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-700">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-extrabold text-[10px] tracking-wider">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-bold text-[10px] tracking-wider">
                 <tr>
                   <th className="p-3.5">Contractor / Customer</th>
                   <th className="p-3.5">Type</th>
                   <th className="p-3.5">Phone</th>
-                  <th className="p-3.5">GSTIN</th>
+                  <th className="p-3.5">Address</th>
                   <th className="p-3.5">Credit Limit</th>
                   <th className="p-3.5">Udhaar Balance</th>
                   <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredCustomers.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/80 transition">
-                    <td className="p-3.5 font-bold text-slate-900">{c.name}</td>
-                    <td className="p-3.5">
-                      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-bold">
-                        {c.type}
-                      </span>
-                    </td>
-                    <td className="p-3.5 font-mono text-slate-600 font-medium">{c.phone || '-'}</td>
-                    <td className="p-3.5 font-mono text-slate-600">{c.gstin || '-'}</td>
-                    <td className="p-3.5 font-semibold text-slate-600">₹ {c.credit_limit.toLocaleString('en-IN')}</td>
-                    <td className={`p-3.5 font-extrabold ${c.credit_balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                      ₹ {c.credit_balance.toFixed(2)}
-                    </td>
-                    <td className="p-3.5 text-right space-x-2">
-                      {c.credit_balance > 0 && (
-                        <button
-                          onClick={() => openPaymentModal(c)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-2xs"
-                        >
-                          Jama
-                        </button>
-                      )}
-                      <button
-                        onClick={() => openEditModal(c)}
-                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg"
-                      >
-                        Edit
-                      </button>
+                {filteredCustomers.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="p-8 text-center text-slate-400 text-xs">
+                      No customer or contractor records found matching your filter.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredCustomers.map((c) => (
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition">
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900">{c.name}</div>
+                        {c.notes && <div className="text-[11px] text-slate-400 truncate max-w-xs">{c.notes}</div>}
+                      </td>
+                      <td className="p-3.5">
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-semibold">
+                          {c.type}
+                        </span>
+                      </td>
+                      <td className="p-3.5 font-mono text-slate-600 font-medium">{c.phone || '-'}</td>
+                      <td className="p-3.5 text-slate-600">{c.address || '-'}</td>
+                      <td className="p-3.5 font-semibold text-slate-600">₹ {(c.credit_limit || 50000).toLocaleString('en-IN')}</td>
+                      <td className={`p-3.5 font-bold ${(c.credit_balance || 0) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        ₹ {(c.credit_balance || 0).toFixed(2)}
+                      </td>
+                      <td className="p-3.5 text-right space-x-2">
+                        {(c.credit_balance || 0) > 0 && (
+                          <button
+                            onClick={() => openPaymentModal(c)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-2xs transition"
+                          >
+                            Jama
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openEditModal(c)}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
