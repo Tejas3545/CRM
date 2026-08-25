@@ -36,26 +36,26 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-red-50 flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-xl space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 bg-orange-600/20 text-orange-500 rounded-xl flex items-center justify-center mx-auto border border-orange-500/30">
-            <Wrench className="w-6 h-6" />
+          <div className="w-14 h-14 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-2xl flex items-center justify-center mx-auto shadow-md">
+            <Wrench className="w-7 h-7" />
           </div>
-          <h1 className="text-xl font-bold text-slate-100 tracking-tight">Apex Hardware & CRM</h1>
-          <p className="text-xs text-slate-400">Plumbing Retail, Wholesale & Udhaar Ledger System</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Apex Vyapar Billing</h1>
+          <p className="text-xs text-slate-500 font-semibold">Plumbing Retail, Wholesale & Udhaar Ledger System</p>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs p-3 rounded-lg text-center font-semibold">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs p-3.5 rounded-xl text-center font-bold shadow-xs">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Username</label>
+            <label className="block text-slate-700 font-bold mb-1.5">Username</label>
             <div className="relative">
               <input
                 type="text"
@@ -63,14 +63,14 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter username (e.g. admin)"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-2xs"
               />
-              <User className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+              <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Password</label>
+            <label className="block text-slate-700 font-bold mb-1.5">Password</label>
             <div className="relative">
               <input
                 type="password"
@@ -78,37 +78,37 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 font-semibold placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-2xs"
               />
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg text-sm transition shadow-lg shadow-orange-950/50"
+            className="w-full py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-extrabold text-sm rounded-xl shadow-md transition"
           >
-            {loading ? 'Authenticating...' : 'Sign In to POS'}
+            {loading ? 'Authenticating...' : 'Sign In to Vyapar POS'}
           </button>
         </form>
 
-        {/* Quick Fill Buttons for Uncle Demo */}
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2 text-center">
-          <div className="text-[11px] font-semibold text-slate-400 flex items-center justify-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-orange-400" />
-            <span>Instant Login Credentials for Demo</span>
+        {/* Instant Demo Helper Pills */}
+        <div className="pt-3 border-t border-slate-100 space-y-2.5">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center flex items-center justify-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-red-600" />
+            Instant Demo Credentials
           </div>
-          <div className="flex space-x-2">
+          <div className="grid grid-cols-2 gap-2">
             <button
               onClick={fillQuickDemoAdmin}
-              className="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded border border-slate-700"
+              className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition shadow-2xs"
             >
               Fill Owner Login
             </button>
             <button
               onClick={fillQuickDemoStaff}
-              className="flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-semibold rounded border border-slate-700"
+              className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition shadow-2xs"
             >
               Fill Cashier Login
             </button>

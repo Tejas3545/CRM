@@ -17,8 +17,8 @@ const ProtectedLayout = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-sm">
-        Authenticating POS system...
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 text-sm font-medium">
+        Loading Apex Vyapar Billing...
       </div>
     );
   }
@@ -28,11 +28,11 @@ const ProtectedLayout = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col font-sans text-slate-100 antialiased selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 antialiased selection:bg-red-600 selection:text-white">
       <Navbar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-      <div className="flex flex-1 relative">
+      <div className="flex flex-1 relative min-h-0 w-full overflow-hidden">
         <Sidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-        <main className="flex-1 bg-slate-950 overflow-y-auto w-full min-w-0">
+        <main className="flex-1 bg-slate-50 overflow-y-auto w-full min-w-0">
           {children}
         </main>
       </div>
