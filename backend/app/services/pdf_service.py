@@ -161,7 +161,7 @@ def generate_gst_invoice_pdf(sale, customer, items) -> bytes:
     cust_phone = customer.phone if customer else "N/A"
     cust_address = customer.address if (customer and customer.address) else "N/A"
     cust_type = customer.type if customer else "Retail"
-    cust_gstin = customer.gstin if (customer and customer.gstin) else "N/A"
+    cust_gstin = getattr(customer, 'gstin', None) or "Unregistered / Consumer"
 
     cust_left = Paragraph(
         f"<b>Billed To:</b><br/>"
